@@ -5,9 +5,7 @@ from training import train
 def parse_arguments():
     parser = ArgumentParser(description='Train TideGAN')
     parser.add_argument('--batchSize', type=int, default=64, help='input batch size')
-    parser.add_argument('--isTrain ', default=True, help='If True, runs network in train mode')
     parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-    parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
     parser.add_argument('--name', type=str, default='tidegan', help='name of the experiment. It decides where to store samples and models')
     parser.add_argument('--model_size', type=int, default=64, help='Model size parameter used in WaveGAN')
     parser.add_argument('--ngpus', type=int, default=1, help='Number of GPUs to use for training')
@@ -42,6 +40,7 @@ def parse_arguments():
     parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
     parser.add_argument('audio_dir_A', help='Path to domain A audio samples')
     parser.add_argument('audio_dir_B', help='Path to domain B audio samples')
+    parser.add_argument('checkpoints_dir', help='models and outputs are saved here')
     
     args = parser.parse_args()
     args.isTrain = True
