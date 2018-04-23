@@ -43,7 +43,9 @@ def parse_arguments():
     parser.add_argument('audio_dir_A', help='Path to domain A audio samples')
     parser.add_argument('audio_dir_B', help='Path to domain B audio samples')
     
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.isTrain = True
+    return args
 
 
 if __name__ == '__main__':

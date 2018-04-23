@@ -2,6 +2,7 @@ import os
 import time
 from sample import get_all_audio_filepaths, create_data_split
 from cyclegan import CycleGANModel
+from utils import np_to_input_tensor
 
 
 def train(opt):

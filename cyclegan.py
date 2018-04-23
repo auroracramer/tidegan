@@ -102,7 +102,10 @@ class BaseModel():
 
     def initialize(self, opt):
         self.opt = opt
-        self.gpu_ids = opt.gpu_ids
+        if type(opt.gpu_ids) == list:
+            self.gpu_ids = opt.gpu_ids
+        else:
+            self.gpu_ids = [int(x) for x in opt.gpu_ids.split(',')]
         self.isTrain = opt.isTrain
         self.Tensor = torch.cuda.FloatTensor if self.gpu_ids else torch.Tensor
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
@@ -173,11 +176,11 @@ class CycleGANModel(BaseModel):
         if self.isTrain:
             use_sigmoid = opt.no_lsgan
             self.netD_A = WaveGANDiscriminator(model_size=opt.model_size, ngpus=opt.ngpus,
-                                               num_channels=opt.num_channels, shift_factor=opt.shift_factor,
+                                               shift_factor=opt.shift_factor,
                                                alpha=opt.alpha, batch_shuffle=opt.batch_shuffle,
                                                verbose=opt.verbose)
             self.netD_B = WaveGANDiscriminator(model_size=opt.model_size, ngpus=opt.ngpus,
-                                               num_channels=opt.num_channels, shift_factor=opt.shift_factor,
+                                               shift_factor=opt.shift_factor,
                                                alpha=opt.alpha, batch_shuffle=opt.batch_shuffle,
                                                verbose=opt.verbose)
             
