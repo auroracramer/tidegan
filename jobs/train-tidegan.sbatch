@@ -7,17 +7,17 @@
 #SBATCH --mem=64GB
 #SBATCH --time=7-0
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=name@email.org
+#SBATCH --mail-user=jtc440@nyu.edu
 #SBATCH --output="train-tidegan-%j.out"
 #SBATCH --err="train-tidegan-%j.err"
 
 source ~/.bashrc
 source activate aml
 
-SRCDIR=""
-AUDIO_A_DIR=""
-AUDIO_B_DIR=""
-OUTPUT_DIR=""
+SRCDIR="/home/jtc440/dev/tidegan"
+AUDIO_A_DIR="/beegfs/jtc440/aml/TheDrumClub-Kit004-THEMEGABUNDLE/Rhodes Polaris"
+AUDIO_B_DIR="/beegfs/jtc440/aml/TheDrumClub-Kit004-THEMEGABUNDLE/Korg M1"
+OUTPUT_DIR="/scratch/jtc440/cyclegan"
 
 module purge
 module load cuda/8.0.44
