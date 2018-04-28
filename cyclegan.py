@@ -65,7 +65,7 @@ class GANLoss(nn.Module):
         target_tensor = self.get_target_tensor(input, target_is_real)
         return self.loss(input, target_tensor)
 
-    
+
 class AudioPool():
     def __init__(self, pool_size):
         self.pool_size = pool_size
@@ -156,7 +156,7 @@ class BaseModel():
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate = %.7f' % lr)
 
-        
+
 class CycleGANModel(BaseModel):
     def name(self):
         return 'CycleGANModel'
@@ -168,22 +168,20 @@ class CycleGANModel(BaseModel):
         # Code (paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
         self.netG_A = WaveGANGenerator(model_size=opt.model_size, ngpus=opt.ngpus,
                                        latent_dim=opt.latent_dim, alpha=opt.alpha,
-                                       post_proc_filt_len=opt.post_proc_filt_len, verbose=opt.verbose)
+                                       post_proc_filt_len=opt.post_proc_filt_len)
         self.netG_B = WaveGANGenerator(model_size=opt.model_size, ngpus=opt.ngpus,
                                        latent_dim=opt.latent_dim, alpha=opt.alpha,
-                                       post_proc_filt_len=opt.post_proc_filt_len, verbose=opt.verbose)
+                                       post_proc_filt_len=opt.post_proc_filt_len)
 
         if self.isTrain:
             use_sigmoid = opt.no_lsgan
             self.netD_A = WaveGANDiscriminator(model_size=opt.model_size, ngpus=opt.ngpus,
                                                shift_factor=opt.shift_factor,
-                                               alpha=opt.alpha, batch_shuffle=opt.batch_shuffle,
-                                               verbose=opt.verbose)
+                                               alpha=opt.alpha, batch_shuffle=opt.batch_shuffle)
             self.netD_B = WaveGANDiscriminator(model_size=opt.model_size, ngpus=opt.ngpus,
                                                shift_factor=opt.shift_factor,
-                                               alpha=opt.alpha, batch_shuffle=opt.batch_shuffle,
-                                               verbose=opt.verbose)
-            
+                                               alpha=opt.alpha, batch_shuffle=opt.batch_shuffle)
+
 
         if self.isTrain:
             self.fake_A_pool = AudioPool(opt.pool_size)

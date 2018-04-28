@@ -1,8 +1,9 @@
 import os
+import json
 import time
 from sample import get_all_audio_filepaths, create_data_split
 from cyclegan import CycleGANModel
-from utils import np_to_input_tensor
+from utils import np_to_input_tensor, save_tidegan_samples
 
 
 def train(opt):
@@ -12,10 +13,14 @@ def train(opt):
     audio_filepaths_B = get_all_audio_filepaths(opt.audio_dir_B)
     genB, valid_data_B, test_data_B = create_data_split(audio_filepaths_B, 0.1, 0.1, opt.batchSize, 64, 64)
 
-    
+
     model_dir = os.path.join(opt.checkpoints_dir, opt.name)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
+
+    config_path = os.path.join(model_dir, 'config.json')
+    with open(config_path, 'w') as f:
+        json.dump(vars(opt), f)
 
     model = CycleGANModel()
     model.initialize(opt)
@@ -29,7 +34,7 @@ def train(opt):
 
         for batch_idx in range(opt.batches_per_epoch):
             data_A = np_to_input_tensor(next(genA)['X'], use_cuda=use_cuda)
-            data_B = np_to_input_tensor(next(genB)['X'], use_cuda=use_cuda)  
+            data_B = np_to_input_tensor(next(genB)['X'], use_cuda=use_cuda)
             data = {'A': data_A, 'B': data_B, 'A_paths': [], 'B_paths': []}
 
             iter_start_time = time.time()

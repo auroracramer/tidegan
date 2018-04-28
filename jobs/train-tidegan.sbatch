@@ -15,9 +15,9 @@ source ~/.bashrc
 source activate aml
 
 SRCDIR="/home/jtc440/dev/tidegan"
-AUDIO_A_DIR="/beegfs/jtc440/aml/TheDrumClub-Kit004-THEMEGABUNDLE/Rhodes Polaris"
-AUDIO_B_DIR="/beegfs/jtc440/aml/TheDrumClub-Kit004-THEMEGABUNDLE/Korg M1"
-OUTPUT_DIR="/scratch/jtc440/cyclegan"
+AUDIO_A_DIR="/beegfs/jtc440/aml/minst/uiowa/theremin.music.uiowa.edu/sound files/MIS/Piano_Other/guitar"
+AUDIO_B_DIR="/beegfs/jtc440/aml/minst/uiowa/theremin.music.uiowa.edu/sound files/MIS/Piano_Other/piano"
+OUTPUT_DIR="/scratch/jtc440/cyclegan/guitar-piano"
 
 module purge
 module load cuda/8.0.44
@@ -42,8 +42,8 @@ python $SRCDIR/train_tidegan.py \
     --niter 100 \
     --niter_decay 100 \
     --beta1 0.5 \
-    --beta2 0.999 \
-    --lr 0.0002 \
+    --beta2 0.9 \
+    --lr 0.0001 \
     --lambda_A 10.0 \
     --lambda_B 10.0 \
     --lambda_identity 0.5 \

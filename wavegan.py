@@ -14,7 +14,7 @@ class WaveGANGenerator(nn.Module):
         self.post_proc_filt_len = post_proc_filt_len
         self.alpha = alpha
         self.verbose = verbose
-        
+
         self.conv1 = nn.DataParallel(nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11))
         self.conv2 = nn.DataParallel(
             nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11))
@@ -77,7 +77,7 @@ class WaveGANGenerator(nn.Module):
             print(x.shape)
 
         x = F.relu(self.fc1(x))
-        
+
         x = F.relu(self.fc2(x)).view(-1, 16 * self.model_size, 16)
         if self.verbose:
             print(x.shape)
@@ -115,7 +115,7 @@ class WaveGANGenerator(nn.Module):
                 print(output.shape)
 
         return output
-    
+
 class PhaseShuffle(nn.Module):
     """
     Performs phase shuffling, i.e. shifting feature axis of a 3D tensor
@@ -126,49 +126,49 @@ class PhaseShuffle(nn.Module):
         super(PhaseShuffle, self).__init__()
         self.n = n
         self.batch_shuffle = batch_shuffle
-        
+
     def forward(self, x):
         # Make sure to use PyTorch to generate number RNG state is all shared
-        if self.batch_shuffle:                                                              
-            # Make sure to use PyTorcTrueh to generate number RNG state is all shared       
+        if self.batch_shuffle:
+            # Make sure to use PyTorcTrueh to generate number RNG state is all shared
             k = int(torch.Tensor(1).random_(0, 2*self.n + 1)) - self.n
 
-            # Return if no phase shift                                                      
-            if k == 0:                                                                      
-                return x                                                                    
+            # Return if no phase shift
+            if k == 0:
+                return x
 
-            # Slice feature dimension                                                       
-            if k > 0:                                                                       
-                x_trunc = x[:, :, :-k]                                                      
-                pad = (k, 0)                                                                
-            else:                                                                           
-                x_trunc = x[:, :, -k:]                                                      
-                pad = (0, -k)                                                               
+            # Slice feature dimension
+            if k > 0:
+                x_trunc = x[:, :, :-k]
+                pad = (k, 0)
+            else:
+                x_trunc = x[:, :, -k:]
+                pad = (0, -k)
 
-            # Reflection padding                                                            
-            x_shuffle = F.pad(x_trunc, pad, mode='reflect')                                 
+            # Reflection padding
+            x_shuffle = F.pad(x_trunc, pad, mode='reflect')
 
-        else:                                                                               
-            k_list = torch.Tensor(x.shape[0]).random_(0, 2*self.n+1) - self.n                                                         
-            k_list = k_list.numpy().astype(int)                                             
-            x_shuffle = x.clone()                                                           
+        else:
+            k_list = torch.Tensor(x.shape[0]).random_(0, 2*self.n+1) - self.n
+            k_list = k_list.numpy().astype(int)
+            x_shuffle = x.clone()
 
-            for idx, k in enumerate(k_list):                                                
-                k = int(k)                                                                  
-                if k > 0:                                                                   
-                    xi_trunc = x[idx:idx+1, :, :-k]                                         
-                    pad = (k, 0)                                                            
-                else:                                                                       
-                    xi_trunc = x[idx:idx+1, :, -k:]                                         
-                    pad = (0, -k)                                                           
+            for idx, k in enumerate(k_list):
+                k = int(k)
+                if k > 0:
+                    xi_trunc = x[idx:idx+1, :, :-k]
+                    pad = (k, 0)
+                else:
+                    xi_trunc = x[idx:idx+1, :, -k:]
+                    pad = (0, -k)
 
-                x_shuffle[idx:idx+1] = F.pad(xi_trunc, pad, mode='reflect')                 
+                x_shuffle[idx:idx+1] = F.pad(xi_trunc, pad, mode='reflect')
 
 
         assert x_shuffle.shape == x.shape, "{}, {}".format(x_shuffle.shape, x.shape)
         return x_shuffle
-        
-        
+
+
 class WaveGANDiscriminator(nn.Module):
     def __init__(self, model_size=64, ngpus=1, num_channels=1, shift_factor=2, alpha=0.2, batch_shuffle=False, verbose=False):
         super(WaveGANDiscriminator, self).__init__()
@@ -228,3 +228,23 @@ class WaveGANDiscriminator(nn.Module):
             print(x.shape)
 
         return F.sigmoid(self.fc1(x))
+
+
+def load_wavegan_generator(filepath, model_size=64, ngpus=1, num_channels=1,
+                           latent_dim=100, post_proc_filt_len=512, **kwargs):
+    model = WaveGANGenerator(model_size=model_size, ngpus=ngpus,
+                             num_channels=num_channels, latent_dim=latent_dim,
+                             post_proc_filt_len=post_proc_filt_len)
+    model.load_state_dict(torch.load(filepath))
+
+    return model
+
+
+def load_wavegan_discriminator(filepath, model_size=64, ngpus=1, num_channels=1,
+                               shift_factor=2, alpha=0.2, **kwargs):
+    model = WaveGANDiscriminator(model_size=model_size, ngpus=ngpus,
+                                 num_channels=num_channels,
+                                 shift_factor=shift_factor, alpha=alpha)
+    model.load_state_dict(torch.load(filepath))
+
+    return model
