@@ -54,7 +54,7 @@ def create_batch_generator(audio_filepath_list, batch_size):
 
 def get_all_audio_filepaths(audio_dir):
     return [os.path.join(root, fname)
-            for (root, dir_names, file_names) in os.walk(audio_dir)
+            for (root, dir_names, file_names) in os.walk(audio_dir, followlinks=True)
             for fname in file_names
             if os.path.splitext(fname.lower())[1] in ('.wav', '.mp3', '.aiff', '.aif')]
 

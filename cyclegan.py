@@ -8,6 +8,7 @@ import os
 import itertools
 from utils import print_network, tensor2audio
 from wavegan import WaveGANGenerator, WaveGANDiscriminator
+from wgan import calc_gradient_penalty
 
 
 def get_scheduler(optimizer, opt):
@@ -30,7 +31,7 @@ def get_scheduler(optimizer, opt):
 # but it abstracts away the need to create the target label tensor
 # that has the same size as the input
 class GANLoss(nn.Module):
-    def __init__(self, use_lsgan=True, target_real_label=1.0, target_fake_label=0.0,
+    def __init__(self, loss_type='lsgan', target_real_label=1.0, target_fake_label=0.0,
                  tensor=torch.FloatTensor):
         super(GANLoss, self).__init__()
         self.real_label = target_real_label
@@ -38,10 +39,13 @@ class GANLoss(nn.Module):
         self.real_label_var = None
         self.fake_label_var = None
         self.Tensor = tensor
-        if use_lsgan:
+        self.loss_type = loss_type
+        if loss_type == 'lsgan':
             self.loss = nn.MSELoss()
-        else:
+        elif loss_type == 'gan':
             self.loss = nn.BCELoss()
+        elif loss_type == 'wgan-wp':
+            self.loss = None
 
     def get_target_tensor(self, input, target_is_real):
         target_tensor = None
@@ -62,8 +66,13 @@ class GANLoss(nn.Module):
         return target_tensor
 
     def __call__(self, input, target_is_real):
-        target_tensor = self.get_target_tensor(input, target_is_real)
-        return self.loss(input, target_tensor)
+        if self.loss_type != 'wgan-wp':
+            target_tensor = self.get_target_tensor(input, target_is_real)
+            return self.loss(input, target_tensor)
+        else:
+            sign = -1 if target_is_real else 1
+            return sign * input.mean()
+
 
 
 class AudioPool():
@@ -187,7 +196,7 @@ class CycleGANModel(BaseModel):
             self.fake_A_pool = AudioPool(opt.pool_size)
             self.fake_B_pool = AudioPool(opt.pool_size)
             # define loss functions
-            self.criterionGAN = GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
+            self.criterionGAN = GANLoss(loss_type=opt.gan_loss, tensor=self.Tensor)
             self.criterionCycle = torch.nn.L1Loss()
             self.criterionIdt = torch.nn.L1Loss()
             # initialize optimizers
@@ -250,6 +259,15 @@ class CycleGANModel(BaseModel):
         loss_D_fake = self.criterionGAN(pred_fake, False)
         # Combined loss
         loss_D = (loss_D_real + loss_D_fake) * 0.5
+
+        # Gradient penalty loss for WGAN-WP
+        if self.opt.gan_loss == 'wgan-wp':
+            loss_wp = calc_gradient_penalty(netD, real, fake,
+                                  self.opt.batchSize, self.opt.lambda_wp,
+                                  use_cuda=len(self.gpu_ids) > 0)
+
+            loss_D += loss_wp
+
         # backward
         loss_D.backward()
         return loss_D

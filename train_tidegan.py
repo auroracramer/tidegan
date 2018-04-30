@@ -29,9 +29,10 @@ def parse_arguments():
     parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
     parser.add_argument('--beta2', type=float, default=0.999, help='momentum term of adam')
     parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate for adam')
-    parser.add_argument('--no_lsgan', action='store_true', help='do *not* use least square GAN, if false, use vanilla GAN')
+    parser.add_argument('--gan-loss', default='wgan-wp', help='GAN loss type', choices=['gan', 'lsgan', 'wgan-wp'])
     parser.add_argument('--lambda_A', type=float, default=10.0, help='weight for cycle loss (A -> B -> A)')
     parser.add_argument('--lambda_B', type=float, default=10.0, help='weight for cycle loss (B -> A -> B)')
+    parser.add_argument('--lambda_wp', type=float, default=10.0, help='weight for wgan-wp gradient penalty')
     parser.add_argument('--lambda_identity', type=float, default=0.5,
                         help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss.'
                         'For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
@@ -41,7 +42,7 @@ def parse_arguments():
     parser.add_argument('audio_dir_A', help='Path to domain A audio samples')
     parser.add_argument('audio_dir_B', help='Path to domain B audio samples')
     parser.add_argument('checkpoints_dir', help='models and outputs are saved here')
-    
+
     args = parser.parse_args()
     args.isTrain = True
     return args
