@@ -15,9 +15,9 @@ source ~/.bashrc
 source activate aml
 
 SRCDIR="/home/jtc440/dev/tidegan"
-AUDIO_A_DIR="/beegfs/jtc440/aml/minst/uiowa/theremin.music.uiowa.edu/sound files/MIS/Piano_Other/guitar"
-AUDIO_B_DIR="/beegfs/jtc440/aml/minst/uiowa/theremin.music.uiowa.edu/sound files/MIS/Piano_Other/piano"
-OUTPUT_DIR="/scratch/jtc440/cyclegan/guitar-piano"
+AUDIO_A_DIR="/beegfs/jtc440/aml/nsynth/nsynth-train/brass_acoustic"
+AUDIO_B_DIR="/beegfs/jtc440/aml/nsynth/nsynth-train/reed_acoustic"
+OUTPUT_DIR="/scratch/jtc440/cyclegan/brass-reed-nsynth"
 
 module purge
 module load cuda/8.0.44
@@ -39,11 +39,12 @@ python $SRCDIR/train_tidegan.py \
     --print_freq 100 \
     --save_latest_freq 5000 \
     --save_epoch_freq 5 \
-    --niter 100 \
-    --niter_decay 100 \
+    --niter 500 \
+    --niter_decay 500 \
     --beta1 0.5 \
     --beta2 0.9 \
     --lr 0.0001 \
+    --gan-loss wgan-wp \
     --lambda_A 10.0 \
     --lambda_B 10.0 \
     --lambda_identity 0.5 \

@@ -183,7 +183,7 @@ class CycleGANModel(BaseModel):
                                        post_proc_filt_len=opt.post_proc_filt_len)
 
         if self.isTrain:
-            use_sigmoid = opt.no_lsgan
+            use_sigmoid = opt.gan_loss != 'lsgan'
             self.netD_A = WaveGANDiscriminator(model_size=opt.model_size, ngpus=opt.ngpus,
                                                shift_factor=opt.shift_factor,
                                                alpha=opt.alpha, batch_shuffle=opt.batch_shuffle)
