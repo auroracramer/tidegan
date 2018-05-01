@@ -12,10 +12,10 @@ LOGGER.setLevel(logging.DEBUG)
 
 def train(opt):
     audio_filepaths_A = get_all_audio_filepaths(opt.audio_dir_A)
-    genA, valid_data_A, test_data_A = create_data_split(audio_filepaths_A, 0.1, 0.1, opt.batchSize, 64, 64)
+    genA, valid_data_A, test_data_A = create_data_split(audio_filepaths_A, 0.1, 0.1, opt.batchSize, 64, 64, rms_threshold=opt.rms_threshold)
 
     audio_filepaths_B = get_all_audio_filepaths(opt.audio_dir_B)
-    genB, valid_data_B, test_data_B = create_data_split(audio_filepaths_B, 0.1, 0.1, opt.batchSize, 64, 64)
+    genB, valid_data_B, test_data_B = create_data_split(audio_filepaths_B, 0.1, 0.1, opt.batchSize, 64, 64, rms_threshold=opt.rms_threshold)
 
 
     model_dir = os.path.join(opt.checkpoints_dir, opt.name)
@@ -55,6 +55,7 @@ def train(opt):
 
             if total_steps % opt.print_freq == 0:
                 errors = model.get_current_errors()
+                LOGGER.info(str(errors))
                 t = (time.time() - iter_start_time) / opt.batchSize
 
             if total_steps % opt.save_latest_freq == 0:

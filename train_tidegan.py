@@ -12,6 +12,7 @@ def parse_arguments():
     parser.add_argument('--batchSize', type=int, default=64, help='input batch size')
     parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
     parser.add_argument('--name', type=str, default='tidegan', help='name of the experiment. It decides where to store samples and models')
+    parser.add_argument('--rms-threshold', type=float, default=0.2, help='root-mean-square threshold for selecting audio samples')
     parser.add_argument('--model_size', type=int, default=64, help='Model size parameter used in WaveGAN')
     parser.add_argument('--ngpus', type=int, default=1, help='Number of GPUs to use for training')
     parser.add_argument('--latent_dim', type=int, default=100, help='Size of latent dimension used by generator')
