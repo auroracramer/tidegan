@@ -5,11 +5,14 @@ from torch.optim import lr_scheduler
 import torch.nn as nn
 import random
 import os
+import logging
 import itertools
 from utils import print_network, tensor2audio
 from wavegan import WaveGANGenerator, WaveGANDiscriminator
 from wgan import calc_gradient_penalty
 
+LOGGER = logging.getLogger('tidegan')
+LOGGER.setLevel(logging.DEBUG)
 
 def get_scheduler(optimizer, opt):
     if opt.lr_policy == 'lambda':
@@ -163,7 +166,7 @@ class BaseModel():
         for scheduler in self.schedulers:
             scheduler.step()
         lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate = %.7f' % lr)
+        LOGGER.info('learning rate = %.7f' % lr)
 
 
 class CycleGANModel(BaseModel):
@@ -212,13 +215,13 @@ class CycleGANModel(BaseModel):
             for optimizer in self.optimizers:
                 self.schedulers.append(get_scheduler(optimizer, opt))
 
-        print('---------- Networks initialized -------------')
+        LOGGER.info('---------- Networks initialized -------------')
         print_network(self.netG_A)
         print_network(self.netG_B)
         if self.isTrain:
             print_network(self.netD_A)
             print_network(self.netD_B)
-        print('-----------------------------------------------')
+        LOGGER.info('-----------------------------------------------')
 
     def set_input(self, input):
         AtoB = self.opt.which_direction == 'AtoB'
@@ -260,27 +263,39 @@ class CycleGANModel(BaseModel):
         # Combined loss
         loss_D = (loss_D_real + loss_D_fake) * 0.5
 
-        # Gradient penalty loss for WGAN-WP
-        if self.opt.gan_loss == 'wgan-wp':
-            loss_wp = calc_gradient_penalty(netD, real, fake,
-                                  self.opt.batchSize, self.opt.lambda_wp,
-                                  use_cuda=len(self.gpu_ids) > 0)
-
-            loss_D += loss_wp
-
         # backward
         loss_D.backward()
         return loss_D
+
+    def backward_D_wp(self, netD, real, fake):
+        # Gradient penalty loss for WGAN-WP
+        loss_D_wp = calc_gradient_penalty(netD, real, fake,
+                                         self.opt.batchSize, self.opt.lambda_wp,
+                                         use_cuda=len(self.gpu_ids) > 0)
+
+        loss_D_wp.backward()
+        return loss_D_wp
+
 
     def backward_D_A(self):
         fake_B = self.fake_B_pool.query(self.fake_B)
         loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)
         self.loss_D_A = loss_D_A.data[0]
+        if self.opt.gan_loss == 'wgan-wp':
+            loss_D_wp_A = self.backward_D_wp(self.netD_A, self.real_B, fake_B)
+            self.loss_D_wp_A = loss_D_wp_A.data[0]
+        else:
+            self.loss_D_wp_A = 0
 
     def backward_D_B(self):
         fake_A = self.fake_A_pool.query(self.fake_A)
         loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)
         self.loss_D_B = loss_D_B.data[0]
+        if self.opt.gan_loss == 'wgan-wp':
+            loss_D_wp_B = self.backward_D_wp(self.netD_B, self.real_A, fake_A)
+            self.loss_D_wp_B = loss_D_wp_B.data[0]
+        else:
+            self.loss_D_wp_B = 0
 
     def backward_G(self):
         lambda_idt = self.opt.lambda_identity
@@ -358,6 +373,11 @@ class CycleGANModel(BaseModel):
         if self.opt.lambda_identity > 0.0:
             ret_errors['idt_A'] = self.loss_idt_A
             ret_errors['idt_B'] = self.loss_idt_B
+
+        if self.opt.gan_loss == 'wgan-wp':
+            ret_errors['WP_A'] = self.loss_D_wp_A
+            ret_errors['WP_B'] = self.loss_D_wp_B
+
         return ret_errors
 
     def get_current_audibles(self):

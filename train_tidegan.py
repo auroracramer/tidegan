@@ -1,5 +1,10 @@
+import logging
 from argparse import ArgumentParser
 from training import train
+from log import init_console_logger
+
+LOGGER = logging.getLogger('tidegan')
+LOGGER.setLevel(logging.DEBUG)
 
 
 def parse_arguments():
@@ -49,4 +54,5 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
+    init_console_logger(LOGGER, verbose=True)
     train(parse_arguments())

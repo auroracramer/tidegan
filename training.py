@@ -1,9 +1,13 @@
 import os
 import json
 import time
+import logging
 from sample import get_all_audio_filepaths, create_data_split
 from cyclegan import CycleGANModel
 from utils import np_to_input_tensor, save_tidegan_samples
+
+LOGGER = logging.getLogger('tidegan')
+LOGGER.setLevel(logging.DEBUG)
 
 
 def train(opt):
@@ -54,17 +58,17 @@ def train(opt):
                 t = (time.time() - iter_start_time) / opt.batchSize
 
             if total_steps % opt.save_latest_freq == 0:
-                print('saving the latest model (epoch %d, total_steps %d)' %
+                LOGGER.info('saving the latest model (epoch %d, total_steps %d)' %
                       (epoch, total_steps))
                 model.save('latest')
 
             iter_data_time = time.time()
         if epoch % opt.save_epoch_freq == 0:
-            print('saving the model at the end of epoch %d, iters %d' %
+            LOGGER.info('saving the model at the end of epoch %d, iters %d' %
                   (epoch, total_steps))
             model.save('latest')
             model.save(epoch)
 
-        print('End of epoch %d / %d \t Time Taken: %d sec' %
+        LOGGER.info('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
         model.update_learning_rate()
