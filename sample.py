@@ -32,7 +32,7 @@ def get_valid_start_idxs(audio_data, window_length=16384, hop_length=128, rms_th
     return np.concatenate(active_regions)
 
 
-def file_sample_generator(filepath, window_length=16384, fs=16000, rms_threshold=0.2):
+def file_sample_generator(filepath, window_length=16384, fs=16000, rms_hop_length=128, rms_threshold=0.2):
     """
     Audio sample generator
     """
@@ -53,7 +53,7 @@ def file_sample_generator(filepath, window_length=16384, fs=16000, rms_threshold
         audio_len = len(audio_data)
 
     valid_start_idxs = get_valid_start_idxs(audio_data, window_length=window_length,
-                                            hop_length=hop_length, rms_threshold=rms_threshold)
+                                            hop_length=rms_hop_length, rms_threshold=rms_threshold)
 
     if len(valid_start_idxs) == 0:
         raise StopIteration()
