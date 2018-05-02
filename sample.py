@@ -15,7 +15,7 @@ def get_valid_start_idxs(audio_data, window_length=16384, hop_length=128, rms_th
     """
     Get start idxs of windows that have sufficient RMS energy
     """
-    rmse = librosa.feature.rmse(audio, frame_length=window_length, hop_length=hop_length,
+    rmse = librosa.feature.rmse(audio_data, frame_length=window_length, hop_length=hop_length,
                                 center=False, pad_mode='constant').flatten()
     active = rmse[0] >= rms_threshold
     active_regions = []
@@ -28,6 +28,9 @@ def get_valid_start_idxs(audio_data, window_length=16384, hop_length=128, rms_th
         else:
             active = True
             last_start = idx + 1
+
+    if not active_regions:
+        return np.array([])
 
     return np.concatenate(active_regions)
 
