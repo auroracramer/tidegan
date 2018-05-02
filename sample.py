@@ -11,6 +11,28 @@ def compute_rms(audio_data):
     return np.sqrt(np.mean(audio_data ** 2))
 
 
+def get_valid_start_idxs(audio_data, window_length=16384, hop_length=128, rms_threshold=0.2):
+    """
+    Get start idxs of windows that have sufficient RMS energy
+    """
+    rmse = librosa.feature.rmse(np.concatenate((np.zeros((50000,)), audio, audio)),
+                                frame_length=window_length, hop_length=hop_length,
+                                center=False, pad_mode='constant').flatten()
+    active = rmse[0] >= rms_threshold
+    active_regions = []
+    last_start = 0
+    for idx in np.nonzero(np.diff(rmse>=rms_threshold))[0]:
+        if active:
+            active = False
+            active_regions.append(np.arange(last_start*hop_length, (idx)*hop_length+1))
+
+        else:
+            active = True
+            last_start = idx + 1
+
+    return np.concatenate(active_regions)
+
+
 def file_sample_generator(filepath, window_length=16384, fs=16000, rms_threshold=0.2):
     """
     Audio sample generator
@@ -31,21 +53,21 @@ def file_sample_generator(filepath, window_length=16384, fs=16000, rms_threshold
         audio_data = np.pad(audio_data, (left_pad, right_pad), mode='constant')
         audio_len = len(audio_data)
 
+    valid_start_idxs = get_valid_start_idxs(audio_data, window_length=window_length,
+                                            hop_length=hop_length, rms_threshold=rms_threshold)
+
     while True:
         if audio_len == window_length:
             # If we only have a single frame's worth of audio, just yield the whole audio
             sample = audio_data
         else:
             # Sample a random window from the audio file
-            start_idx = np.random.randint(0,audio_len - window_length)
+            start_idx = np.random.choice(valid_start_idxs)
             end_idx = start_idx + window_length
             sample = audio_data[start_idx:end_idx]
 
         sample = sample.astype('float32')
         assert not np.any(np.isnan(sample))
-
-        if compute_rms(sample) < rms_threshold:
-            continue
 
         yield {'X': sample}
 
