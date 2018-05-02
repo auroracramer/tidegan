@@ -56,6 +56,9 @@ def file_sample_generator(filepath, window_length=16384, fs=16000, rms_threshold
     valid_start_idxs = get_valid_start_idxs(audio_data, window_length=window_length,
                                             hop_length=hop_length, rms_threshold=rms_threshold)
 
+    if len(valid_start_idxs) == 0:
+        raise StopIteration()
+
     while True:
         if audio_len == window_length:
             # If we only have a single frame's worth of audio, just yield the whole audio
